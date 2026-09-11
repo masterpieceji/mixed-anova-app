@@ -14,14 +14,49 @@ from scipy import stats
 
 st.set_page_config(page_title="Mixed Repeated Measures ANOVA", layout="wide")
 sns.set_theme(style="whitegrid")
+# ============================================================
+#  ฟอนต์ไทยสำหรับกราฟ
+# ============================================================
+import os, urllib.request
 import matplotlib
-for f in ["Loma", "TH Sarabun New", "Garuda", "DejaVu Sans"]:
+from matplotlib import font_manager
+
+FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
+FONT_URLS = {
+    "Sarabun-Regular.ttf":
+        "https://github.com/google/fonts/raw/main/ofl/sarabun/Sarabun-Regular.ttf",
+    "Sarabun-Bold.ttf":
+        "https://github.com/google/fonts/raw/main/ofl/sarabun/Sarabun-Bold.ttf",
+}
+
+@st.cache_resource(show_spinner=False)
+def setup_thai_font() -> str:
+    """ติดตั้ง/ลงทะเบียนฟอนต์ไทยให้ matplotlib แล้วคืนชื่อฟอนต์ที่ใช้ได้"""
+    # 1) หาฟอนต์ไทยที่มีอยู่แล้วในระบบก่อน
+    preferred = ["Sarabun", "TH Sarabun New", "TH SarabunPSK", "Noto Sans Thai",
+                 "Loma", "Garuda", "Waree", "Kanit", "Tahoma", "Leelawadee UI"]
+    installed = {f.name for f in font_manager.fontManager.ttflist}
+    for name in preferred:
+        if name in installed:
+            return name
+
+    # 2) ไม่มี → ดาวน์โหลด Sarabun มาเก็บไว้ในโฟลเดอร์ fonts/
     try:
-        matplotlib.font_manager.findfont(f, fallback_to_default=False)
-        matplotlib.rcParams["font.family"] = f
-        break
+        os.makedirs(FONT_DIR, exist_ok=True)
+        for fname, url in FONT_URLS.items():
+            path = os.path.join(FONT_DIR, fname)
+            if not os.path.exists(path) or os.path.getsize(path) < 10_000:
+                urllib.request.urlretrieve(url, path)
+            font_manager.fontManager.addfont(path)
+        return "Sarabun"
     except Exception:
-        continue
+        return "DejaVu Sans"   # ดาวน์โหลดไม่ได้ (ออฟไลน์) → ใช้ค่าเริ่มต้น
+
+THAI_FONT = setup_thai_font()
+matplotlib.rcParams["font.family"] = THAI_FONT
+matplotlib.rcParams["font.sans-serif"] = [THAI_FONT, "DejaVu Sans"]
+matplotlib.rcParams["axes.unicode_minus"] = False   # กันเครื่องหมายลบเพี้ยน
+plt.rcParams.update(matplotlib.rcParams)
 matplotlib.rcParams["axes.unicode_minus"] = False
 # ============================================================
 #  ตัวช่วยรองรับความต่างของเวอร์ชัน pingouin
