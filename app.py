@@ -14,7 +14,15 @@ from scipy import stats
 
 st.set_page_config(page_title="Mixed Repeated Measures ANOVA", layout="wide")
 sns.set_theme(style="whitegrid")
-
+import matplotlib
+for f in ["Loma", "TH Sarabun New", "Garuda", "DejaVu Sans"]:
+    try:
+        matplotlib.font_manager.findfont(f, fallback_to_default=False)
+        matplotlib.rcParams["font.family"] = f
+        break
+    except Exception:
+        continue
+matplotlib.rcParams["axes.unicode_minus"] = False
 # ============================================================
 #  ตัวช่วยรองรับความต่างของเวอร์ชัน pingouin
 # ============================================================
